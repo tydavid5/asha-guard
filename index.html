@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ASHA Guard, guarded assistant for ASHA workers</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="logo">+</div>
+    <div>
+      <h1>ASHA Guard</h1>
+      <div class="tagline">Guarded assistant for ASHA workers, India</div>
+    </div>
+    <div class="header-spacer"></div>
+    <span class="demo-badge">DEMO MODE</span>
+    <span class="worker-chip">Demo worker: Asha K. &middot; Village demo</span>
+    <span class="worker-chip" id="today-date"></span>
+  </header>
+
+  <div class="demo-strip">
+    Demo mode: simulated answers, no real patient data. This tool does not diagnose and does not give medicine names or doses. Every question, answer and block is recorded in the ledger.
+  </div>
+
+  <div class="body">
+    <nav class="sidebar">
+      <button class="nav-btn active" data-tab="ask">Ask</button>
+      <button class="nav-btn" data-tab="schedule">Immunisation schedule</button>
+      <button class="nav-btn" data-tab="danger">Danger signs</button>
+      <button class="nav-btn" data-tab="ledger">Ledger</button>
+      <button class="nav-btn" data-tab="rules">Rules and sources</button>
+      <div class="side-card">
+        <h4>Guard status</h4>
+        <div class="row"><span>Policy</span><b id="stat-policy">Active</b></div>
+        <div class="row"><span>Answers today</span><b id="stat-answers">0 / 50</b></div>
+        <div class="row"><span>Ledger entries</span><b id="stat-ledger">0</b></div>
+        <div class="cap-track"><div id="cap-bar"></div></div>
+      </div>
+    </nav>
+
+    <main>
+      <!-- ASK -->
+      <section class="tab-panel active" id="tab-ask">
+        <p class="mission">India's roughly one million ASHA workers carry frontline health care to villages on paper registers, so the advice a family gets depends on which worker visits and what she remembers, and a wrong answer about a danger sign can cost a mother or a newborn her life.</p>
+        <p class="howto">Ask about a household situation. ASHA Guard answers only from the National Immunisation Schedule and the WHO danger-sign lists. If it finds a danger sign, it tells you to refer at once. If you ask for a diagnosis or a medicine dose, it blocks the question and sends you to your supervisor. Try one of the examples, or type your own.</p>
+        <div class="ask-row">
+          <input id="ask-input" type="text" placeholder="Example: my baby is 6 weeks old, which vaccines are due today?" autocomplete="off">
+          <button class="btn primary" id="ask-btn">Ask</button>
+        </div>
+        <div class="chips">
+          <span class="chip-label">Try:</span>
+          <button class="chip" data-q="My baby is 6 weeks old. Which vaccines are due today?">6-week vaccines</button>
+          <button class="chip" data-q="Newborn, 10 days old, not feeding well and feels hot.">Newborn not feeding</button>
+          <button class="chip" data-q="A pregnant woman, 7 months, has a severe headache and blurred vision.">Pregnancy headache</button>
+          <button class="chip" data-q="What medicine should I give for a baby's fever, and how much?">Fever medicine dose</button>
+          <button class="chip" data-q="A child missed the 14-week vaccines. What now?">Missed 14-week vaccines</button>
+          <button class="chip" data-q="What is the weather today?">Off-topic question</button>
+        </div>
+        <div id="answer-box"></div>
+      </section>
+
+      <!-- SCHEDULE -->
+      <section class="tab-panel" id="tab-schedule">
+        <h2>National Immunisation Schedule</h2>
+        <p class="muted">Ministry of Health and Family Welfare, Government of India, Universal Immunisation Programme. JE vaccine in endemic districts only. Vitamin A doses continue every 6 months up to 5 years.</p>
+        <div id="schedule-list" style="margin-top: 14px;"></div>
+      </section>
+
+      <!-- DANGER SIGNS -->
+      <section class="tab-panel" id="tab-danger">
+        <h2>Danger signs</h2>
+        <p class="muted">If you see any of these, take the mother or baby to the nearest health facility now. Do not wait for the next visit.</p>
+        <div id="danger-list" style="margin-top: 14px;"></div>
+      </section>
+
+      <!-- LEDGER -->
+      <section class="tab-panel" id="tab-ledger">
+        <h2>Ledger</h2>
+        <p class="muted">Every question, answer and block, recorded for audit. Stored on this device only. Nothing leaves the device.</p>
+        <div class="toolbar" style="margin-top: 14px;">
+          <button class="btn small" id="export-btn">Download ledger (JSON)</button>
+          <button class="btn small" id="clear-btn">Clear ledger</button>
+        </div>
+        <table class="ledger">
+          <thead>
+            <tr><th>Time</th><th>Question</th><th>Decision</th><th>Note</th></tr>
+          </thead>
+          <tbody id="ledger-body"></tbody>
+        </table>
+      </section>
+
+      <!-- RULES -->
+      <section class="tab-panel" id="tab-rules">
+        <h2>Rules and sources</h2>
+        <div class="card">
+          <h3>The guard, in plain words</h3>
+          <ul class="rules-list">
+            <li><strong>Allowlist of sources.</strong> Answers come only from the three sources below. Nothing else can be cited.</li>
+            <li><strong>No dose, no diagnosis.</strong> Any request for a medicine name, a dose, or a diagnosis is blocked and sent to your supervisor (ANM or medical officer).</li>
+            <li><strong>Danger signs are never gated.</strong> A danger sign gets an urgent referral at once, with no confirmation step in the way.</li>
+            <li><strong>Confirm threshold.</strong> A symptom that is not a listed danger sign needs your supervisor to confirm before any guidance is given. In demo mode that confirmation is simulated.</li>
+            <li><strong>Daily cap.</strong> 50 answers a day. Past the cap, the guard blocks further answers and sends you to your supervisor.</li>
+            <li><strong>Ledger.</strong> Every question, answer and block is recorded with the time, the decision and the rule that applied.</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Sources</h3>
+          <ul class="rules-list">
+            <li>National Immunisation Schedule, Ministry of Health and Family Welfare, Government of India: <a href="https://nhm.gov.in/New_Updates_2018/NHM_Components/Immunization/report/National_%20Immunization_Schedule.pdf">nhm.gov.in, National Immunization Schedule (PDF)</a></li>
+            <li>IMNCI danger signs (WHO and UNICEF): <a href="https://theory.pedianotes.in/social-pediatics/integrated-management-of-neonatal-and-childhood-illness-imnci/">IMNCI summary, young infant and child</a> and <a href="https://www.ovid.com/jnls/jfmpc/fulltext/10.4103/jfmpc.jfmpc_1542_22">neonatal danger signs as recommended by WHO and UNICEF</a></li>
+            <li>WHO Pregnancy, Childbirth, Postpartum and Newborn Care (2015), nine pregnancy danger signs: <a href="https://link.springer.com/article/10.1186/s12884-017-1628-6">danger signs in pregnancy study citing the WHO guide</a></li>
+            <li>ASHA workforce, about 10 lakh (1 million) workers under the National Health Mission: <a href="https://www.telegraphindia.com/india/new-labour-codes-exclude-anganwadi-asha-and-midday-meal-workers-from-welfare-cover-prnt/cid/2139152">Telegraph India</a> and <a href="https://socio.health/public-health-and-nutrition/national-health-mission-healthcare-for-all/">National Health Mission overview</a></li>
+            <li>Universal Immunisation Programme scale, about 27 million infants and 30 million pregnant women each year: <a href="https://www.business-standard.com/health/india-universal-immunisation-programme-2025-vaccine-access-coverage-125042500520_1.html">Business Standard</a></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Honest limits</h3>
+          <ul class="rules-list">
+            <li>This is a demo. Answers are simulated lookups from a fixed protocol set, not a live medical service.</li>
+            <li>It does not diagnose, does not name medicines, and does not give doses.</li>
+            <li>It only knows the immunisation schedule and the danger-sign lists. Anything else is refused.</li>
+            <li>It is not a substitute for an ANM, a medical officer, or a health facility.</li>
+            <li>All data stays on this device, in local storage. There are no accounts and no patient records.</li>
+          </ul>
+          <button class="btn small" id="reset-btn">Reset all demo data</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="statusbar">
+    <span>Policy: <b>active</b></span>
+    <span id="status-answers">Answers today: 0 of 50</span>
+    <span>Sources: NIS (MoHFW), IMNCI (WHO and UNICEF), WHO PCPNC 2015</span>
+    <span>Demo mode: simulated answers, no patient data</span>
+  </footer>
+
+</div>
+<script src="guard.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
